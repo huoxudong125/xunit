@@ -17,7 +17,7 @@ namespace Xunit
             var assemblyFileName = typeof(DiaSessionWrapperHelper).Assembly.GetLocalCodeBase();
 
             appDomainManager = new RemoteAppDomainManager(assemblyFileName, null, true, null);
-            helper = appDomainManager.CreateObject<DiaSessionWrapperHelper>(typeof(DiaSessionWrapperHelper).Assembly.FullName, typeof(DiaSessionWrapperHelper).FullName, assemblyFilename);
+            helper = appDomainManager.CreateObject<DiaSessionWrapperHelper>(typeof(DiaSessionWrapperHelper).Assembly.GetName(), typeof(DiaSessionWrapperHelper).FullName, assemblyFilename);
         }
 
         public DiaNavigationData GetNavigationData(string typeName, string methodName)

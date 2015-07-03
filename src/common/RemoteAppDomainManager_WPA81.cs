@@ -18,11 +18,11 @@ namespace Xunit
 
         public string ConfigFileName { get; private set; }
 
-        public TObject CreateObject<TObject>(string assemblyName, string typeName, params object[] args)
+        public TObject CreateObject<TObject>(AssemblyName assemblyName, string typeName, params object[] args)
         {
             try
             {
-                var type = Type.GetType(typeName + ", " + assemblyName, true);
+                var type = Type.GetType(string.Format("{0}, {1}", typeName, assemblyName.FullName), true);
                 return (TObject)Activator.CreateInstance(type, args);
             }
             catch (TargetInvocationException ex)

@@ -303,7 +303,7 @@ namespace Xunit.Runner.MSBuild
                 var assemblyDisplayName = Path.GetFileNameWithoutExtension(assembly.AssemblyFilename);
                 var diagnosticMessageVisitor = new DiagnosticMessageVisitor(Log, assemblyDisplayName, assembly.Configuration.DiagnosticMessagesOrDefault);
 
-                using (var controller = new XunitFrontController(assembly.AssemblyFilename, assembly.ConfigFilename, assembly.ShadowCopy, diagnosticMessageSink: diagnosticMessageVisitor))
+                using (var controller = new XunitFrontController(/* useAppDomain */ true, assembly.AssemblyFilename, assembly.ConfigFilename, assembly.ShadowCopy, diagnosticMessageSink: diagnosticMessageVisitor))
                 using (var discoveryVisitor = new TestDiscoveryVisitor())
                 {
                     // Discover & filter the tests

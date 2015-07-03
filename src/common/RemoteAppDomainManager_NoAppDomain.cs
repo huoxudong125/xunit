@@ -27,15 +27,14 @@ namespace Xunit
 
         public string ConfigFileName { get; private set; }
 
-        public TObject CreateObject<TObject>(string assemblyName, string typeName, params object[] args)
+        public TObject CreateObject<TObject>(AssemblyName assemblyName, string typeName, params object[] args)
         {
             try
             {
 #if DNXCORE50
-                return (TObject)Activator.CreateInstance(Assembly.Load(new AssemblyName(assemblyName)).GetType(typeName), args);
+                return (TObject)Activator.CreateInstance(Assembly.Load(assemblyName).GetType(typeName), args);
 #else
-                var objHandle = Activator.CreateInstance(AppDomain.CurrentDomain, assemblyName, typeName, false, BindingFlags.Default, null, args, null, null);
-                return (TObject)objHandle.Unwrap();
+                return (TObject)Activator.CreateInstance(AppDomain.CurrentDomain, assemblyName.FullName, typeName, false, BindingFlags.Default, null, args, null, null).Unwrap();
 #endif
             }
             catch (TargetInvocationException ex)

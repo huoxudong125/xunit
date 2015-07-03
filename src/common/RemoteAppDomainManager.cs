@@ -6,7 +6,32 @@ using System.Security.Permissions;
 
 namespace Xunit
 {
-    internal class RemoteAppDomainManager : IDisposable
+    internal interface IAppDomainManager : IDisposable
+    {
+        TObject CreateObject<TObject>(AssemblyName assemblyName, string typeName, params object[] args);
+    }
+
+    internal class NoAppDomainManager : IAppDomainManager
+    {
+        readonly string assemblyFileName;
+
+        public NoAppDomainManager(string assemblyFileName)
+        {
+            this.assemblyFileName = assemblyFileName;
+        }
+
+        public TObject CreateObject<TObject>(AssemblyName assemblyName, string typeName, params object[] args)
+        {
+            var assembly = Assembly.Load(assemblyName);
+            var type = assembly.GetType(typeName);
+            var obj = Activator.CreateInstance(type, args);
+            return (TObject)obj;
+        }
+
+        public void Dispose() { }
+    }
+
+    internal class RemoteAppDomainManager : IAppDomainManager
     {
         public RemoteAppDomainManager(string assemblyFileName, string configFileName, bool shadowCopy, string shadowCopyFolder)
         {
@@ -50,11 +75,11 @@ namespace Xunit
             return AppDomain.CreateDomain(Path.GetFileNameWithoutExtension(assemblyFilename), System.AppDomain.CurrentDomain.Evidence, setup, new PermissionSet(PermissionState.Unrestricted));
         }
 
-        public TObject CreateObject<TObject>(string assemblyName, string typeName, params object[] args)
+        public TObject CreateObject<TObject>(AssemblyName assemblyName, string typeName, params object[] args)
         {
             try
             {
-                object unwrappedObject = AppDomain.CreateInstanceAndUnwrap(assemblyName, typeName, false, 0, null, args, null, null, null);
+                var unwrappedObject = AppDomain.CreateInstanceAndUnwrap(assemblyName.FullName, typeName, false, 0, null, args, null, null, null);
                 return (TObject)unwrappedObject;
             }
             catch (TargetInvocationException ex)
