@@ -9,16 +9,13 @@ namespace Xunit
     /// <summary>
     /// Represents options passed to a test framework for discovery or execution.
     /// </summary>
-#if !DNXCORE50
     [DebuggerDisplay("{ToDebuggerDisplay(),nq}")]
-#endif
     public class TestFrameworkOptions : LongLivedMarshalByRefObject, ITestFrameworkDiscoveryOptions, ITestFrameworkExecutionOptions
     {
         readonly Dictionary<string, object> properties = new Dictionary<string, object>();
 
         // Force users to use one of the factory methods
         TestFrameworkOptions() { }
-
 
         /// <summary>
         /// Creates an instance of <see cref="TestFrameworkOptions"/>
@@ -88,9 +85,7 @@ namespace Xunit
         }
 
         string ToDebuggerDisplay()
-        {
-            return string.Format("{{ {0} }}", string.Join(", ", properties.Select(p => string.Format("{{ {0} = {1} }}", p.Key, ToDebuggerDisplay(p.Value))).ToArray()));
-        }
+            => $"{{ {string.Join(", ", properties.Select(p => string.Format("{{ {0} = {1} }}", new object[] { p.Key, ToDebuggerDisplay(p.Value) })).ToArray())} }}";
 
         string ToDebuggerDisplay(object value)
         {
@@ -99,7 +94,7 @@ namespace Xunit
 
             var stringValue = value as string;
             if (stringValue != null)
-                return string.Format("\"{0}\"", stringValue);
+                return $"\"{stringValue}\"";
 
             return value.ToString();
         }

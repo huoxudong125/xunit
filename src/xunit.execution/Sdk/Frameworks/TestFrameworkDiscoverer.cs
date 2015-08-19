@@ -157,7 +157,7 @@ namespace Xunit.Sdk
             }
             catch (Exception ex)
             {
-                DiagnosticMessageSink.OnMessage(new DiagnosticMessage("Exception during discovery:{0}{1}", Environment.NewLine, ex));
+                DiagnosticMessageSink.OnMessage(new DiagnosticMessage($"Exception during discovery:{Environment.NewLine}{ex}"));
                 return true; // Keep going on to the next type
             }
         }
@@ -197,13 +197,13 @@ namespace Xunit.Sdk
 
         class PreserveWorkingFolder : IDisposable
         {
-#if !WINDOWS_PHONE_APP &&!WINDOWS_PHONE && !DNX451 && !DNXCORE50
+#if !WINDOWS_PHONE_APP && !WINDOWS_PHONE && !DOTNETCORE
             readonly string originalWorkingFolder;
 #endif
 
             public PreserveWorkingFolder(IAssemblyInfo assemblyInfo)
             {
-#if !WINDOWS_PHONE_APP && !WINDOWS_PHONE && !DNX451 && !DNXCORE50
+#if !WINDOWS_PHONE_APP && !WINDOWS_PHONE && !DOTNETCORE
                 originalWorkingFolder = Directory.GetCurrentDirectory();
 
                 if (!string.IsNullOrEmpty(assemblyInfo.AssemblyPath))
@@ -213,7 +213,7 @@ namespace Xunit.Sdk
 
             public void Dispose()
             {
-#if !WINDOWS_PHONE_APP && !WINDOWS_PHONE && !DNX451 && !DNXCORE50
+#if !WINDOWS_PHONE_APP && !WINDOWS_PHONE && !DOTNETCORE
                 Directory.SetCurrentDirectory(originalWorkingFolder);
 #endif
             }

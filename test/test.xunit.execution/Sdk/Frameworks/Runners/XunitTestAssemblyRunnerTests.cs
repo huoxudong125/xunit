@@ -32,7 +32,7 @@ public class XunitTestAssemblyRunnerTests
 
             var result = runner.GetTestFrameworkEnvironment();
 
-            Assert.EndsWith("[collection-per-class, parallel]", result);
+            Assert.EndsWith($"[collection-per-class, parallel ({Environment.ProcessorCount} threads)]", result);
         }
 
         [Fact]
@@ -59,6 +59,18 @@ public class XunitTestAssemblyRunnerTests
             Assert.EndsWith("[collection-per-class, parallel (3 threads)]", result);
         }
 
+        [Fact]
+        public static void Attribute_Unlimited()
+        {
+            var attribute = Mocks.CollectionBehaviorAttribute(maxParallelThreads: -1);
+            var assembly = Mocks.TestAssembly(new[] { attribute });
+            var runner = TestableXunitTestAssemblyRunner.Create(assembly: assembly);
+
+            var result = runner.GetTestFrameworkEnvironment();
+
+            Assert.EndsWith("[collection-per-class, parallel (unlimited threads)]", result);
+        }
+
         [Theory]
         [InlineData(CollectionBehavior.CollectionPerAssembly, "collection-per-assembly")]
         [InlineData(CollectionBehavior.CollectionPerClass, "collection-per-class")]
@@ -70,7 +82,7 @@ public class XunitTestAssemblyRunnerTests
 
             var result = runner.GetTestFrameworkEnvironment();
 
-            Assert.EndsWith(string.Format("[{0}, non-parallel]", expectedDisplayText), result);
+            Assert.EndsWith($"[{expectedDisplayText}, non-parallel]", result);
         }
 
         [Fact]
@@ -120,6 +132,18 @@ public class XunitTestAssemblyRunnerTests
             var result = runner.GetTestFrameworkEnvironment();
 
             Assert.EndsWith("[collection-per-class, parallel (3 threads)]", result);
+        }
+
+        [Fact]
+        public static void TestOptions_Unlimited()
+        {
+            var options = TestFrameworkOptions.ForExecution();
+            options.SetMaxParallelThreads(-1);
+            var runner = TestableXunitTestAssemblyRunner.Create(executionOptions: options);
+
+            var result = runner.GetTestFrameworkEnvironment();
+
+            Assert.EndsWith("[collection-per-class, parallel (unlimited threads)]", result);
         }
 
         [Fact]
@@ -233,7 +257,7 @@ public class XunitTestAssemblyRunnerTests
 
             Assert.IsType<DefaultTestCaseOrderer>(runner.TestCaseOrderer);
             var diagnosticMessage = Assert.Single(runner.DiagnosticMessages.Cast<IDiagnosticMessage>());
-            Assert.StartsWith("Assembly-level test case orderer 'XunitTestAssemblyRunnerTests+TestCaseOrderer+MyCtorThrowingTestCaseOrderer' threw 'System.DivideByZeroException' during construction:", diagnosticMessage.Message);
+            Assert.StartsWith("Assembly-level test case orderer 'XunitTestAssemblyRunnerTests+TestCaseOrderer+MyCtorThrowingTestCaseOrderer' threw 'System.DivideByZeroException' during construction: Attempted to divide by zero.", diagnosticMessage.Message);
         }
 
         class MyCtorThrowingTestCaseOrderer : ITestCaseOrderer
@@ -297,7 +321,7 @@ public class XunitTestAssemblyRunnerTests
 
             Assert.IsType<DefaultTestCaseOrderer>(runner.TestCaseOrderer);
             var diagnosticMessage = Assert.Single(runner.DiagnosticMessages.Cast<IDiagnosticMessage>());
-            Assert.StartsWith("Assembly-level test collection orderer 'XunitTestAssemblyRunnerTests+TestCollectionOrderer+MyCtorThrowingTestCollectionOrderer' threw 'System.DivideByZeroException' during construction:", diagnosticMessage.Message);
+            Assert.StartsWith("Assembly-level test collection orderer 'XunitTestAssemblyRunnerTests+TestCollectionOrderer+MyCtorThrowingTestCollectionOrderer' threw 'System.DivideByZeroException' during construction: Attempted to divide by zero.", diagnosticMessage.Message);
         }
 
         class MyCtorThrowingTestCollectionOrderer : ITestCollectionOrderer

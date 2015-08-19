@@ -119,7 +119,7 @@ namespace Xunit.Runner.MSBuild
             }
 
             XElement assembliesElement = null;
-            var environment = string.Format("{0}-bit .NET {1}", IntPtr.Size * 8, Environment.Version);
+            var environment = $"{IntPtr.Size * 8}-bit .NET {Environment.Version}";
 
             if (NeedsXml)
                 assembliesElement = new XElement("assemblies");
@@ -131,12 +131,12 @@ namespace Xunit.Runner.MSBuild
                     break;
 
                 case "unlimited":
-                    maxThreadCount = 0;
+                    maxThreadCount = -1;
                     break;
 
                 default:
                     int threadValue;
-                    if (!int.TryParse(MaxParallelThreads, out threadValue) || threadValue < 0)
+                    if (!int.TryParse(MaxParallelThreads, out threadValue) || threadValue < 1)
                     {
                         Log.LogError("MaxParallelThreads value '{0}' is invalid: must be 'default', 'unlimited', or a positive number", MaxParallelThreads);
                         return false;

@@ -27,13 +27,15 @@ namespace Xunit
         /// <param name="shadowCopyFolder">The path on disk to use for shadow copying; if <c>null</c>, a folder
         /// will be automatically (randomly) generated</param>
         /// <param name="diagnosticMessageSink">The message sink which received <see cref="IDiagnosticMessage"/> messages.</param>
+        /// <param name="verifyAssembliesOnDisk">Determines whether or not to check for the existence of assembly files.</param>
         public Xunit2Discoverer(bool useAppDomain,
                                 ISourceInformationProvider sourceInformationProvider,
                                 IAssemblyInfo assemblyInfo,
                                 string xunitExecutionAssemblyPath = null,
                                 string shadowCopyFolder = null,
-                                IMessageSink diagnosticMessageSink = null)
-            : this(useAppDomain, sourceInformationProvider, assemblyInfo, null, xunitExecutionAssemblyPath ?? GetXunitExecutionAssemblyPath(assemblyInfo), null, true, shadowCopyFolder, diagnosticMessageSink)
+                                IMessageSink diagnosticMessageSink = null,
+                                bool verifyAssembliesOnDisk = true)
+            : this(useAppDomain, sourceInformationProvider, assemblyInfo, null, xunitExecutionAssemblyPath ?? GetXunitExecutionAssemblyPath(assemblyInfo), null, true, shadowCopyFolder, diagnosticMessageSink, verifyAssembliesOnDisk)
         { }
 
         // Used by Xunit2 when initializing for both discovery and execution.
@@ -43,8 +45,9 @@ namespace Xunit
                                   string configFileName,
                                   bool shadowCopy,
                                   string shadowCopyFolder = null,
-                                  IMessageSink diagnosticMessageSink = null)
-            : this(useAppDomain, sourceInformationProvider, null, assemblyFileName, GetXunitExecutionAssemblyPath(assemblyFileName), configFileName, shadowCopy, shadowCopyFolder, diagnosticMessageSink)
+                                  IMessageSink diagnosticMessageSink = null,
+                                  bool verifyAssembliesOnDisk = true)
+            : this(useAppDomain, sourceInformationProvider, null, assemblyFileName, GetXunitExecutionAssemblyPath(assemblyFileName, verifyAssembliesOnDisk), configFileName, shadowCopy, shadowCopyFolder, diagnosticMessageSink, verifyAssembliesOnDisk)
         { }
 
         Xunit2Discoverer(bool useAppDomain,
@@ -55,10 +58,12 @@ namespace Xunit
                          string configFileName,
                          bool shadowCopy,
                          string shadowCopyFolder,
-                         IMessageSink diagnosticMessageSink)
+                         IMessageSink diagnosticMessageSink,
+                         bool verifyAssembliesOnDisk)
         {
             Guard.ArgumentNotNull("assemblyInfo", (object)assemblyInfo ?? assemblyFileName);
-            Guard.FileExists("xunitExecutionAssemblyPath", xunitExecutionAssemblyPath);
+            if (verifyAssembliesOnDisk)
+                Guard.FileExists("xunitExecutionAssemblyPath", xunitExecutionAssemblyPath);
 
             DiagnosticMessageSink = diagnosticMessageSink ?? new NullMessageSink();
 
@@ -85,7 +90,7 @@ namespace Xunit
 #if ANDROID
             // Android needs to just load the assembly
             return Assembly.Load(xunitExecutionAssemblyPath).GetName();
-#elif WINDOWS_PHONE_APP || WINDOWS_PHONE || DNX451 || DNXCORE50
+#elif WINDOWS_PHONE_APP || WINDOWS_PHONE || DOTNETCORE
             // Make sure we only use the short form
             return Assembly.Load(new AssemblyName { Name = Path.GetFileNameWithoutExtension(xunitExecutionAssemblyPath), Version = new System.Version(0, 0, 0, 0) }).GetName();
 #else
@@ -144,10 +149,11 @@ namespace Xunit
             discoverer.Find(typeName, includeSourceInformation, messageSink, discoveryOptions);
         }
 
-        static string GetXunitExecutionAssemblyPath(string assemblyFileName)
+        static string GetXunitExecutionAssemblyPath(string assemblyFileName, bool verifyTestAssemblyExists)
         {
             Guard.ArgumentNotNullOrEmpty("assemblyFileName", assemblyFileName);
-            Guard.FileExists("assemblyFileName", assemblyFileName);
+            if (verifyTestAssemblyExists)
+                Guard.FileExists("assemblyFileName", assemblyFileName);
 
             return Path.Combine(Path.GetDirectoryName(assemblyFileName), ExecutionHelper.AssemblyFileName);
         }

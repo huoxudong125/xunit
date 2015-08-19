@@ -1,4 +1,8 @@
-﻿using System;
+﻿// HACK: This needs to be temporarily removed from DOTNETCORE because it uses ExecutionContext,
+// which is a type that's not available for dnx451.
+#if !DOTNETCORE
+
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -95,3 +99,5 @@ namespace Xunit.Sdk
         }
     }
 }
+
+#endif

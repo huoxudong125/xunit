@@ -2,7 +2,7 @@
 using System.Reflection;
 using Xunit.Abstractions;
 
-#if WINDOWS_PHONE_APP || WINDOWS_PHONE || DNX451 || DNXCORE50
+#if WINDOWS_PHONE_APP || WINDOWS_PHONE || DOTNETCORE
 using System.IO;
 #endif
 
@@ -28,18 +28,20 @@ namespace Xunit
         /// <param name="shadowCopyFolder">The path on disk to use for shadow copying; if <c>null</c>, a folder
         /// will be automatically (randomly) generated</param>
         /// <param name="diagnosticMessageSink">The message sink which received <see cref="IDiagnosticMessage"/> messages.</param>
+        /// <param name="verifyTestAssemblyExists">Determines whether or not the existence of the test assembly is verified.</param>
         public Xunit2(bool useAppDomain,
                       ISourceInformationProvider sourceInformationProvider,
                       string assemblyFileName,
                       string configFileName = null,
                       bool shadowCopy = true,
                       string shadowCopyFolder = null,
-                      IMessageSink diagnosticMessageSink = null)
-            : base(useAppDomain, sourceInformationProvider, assemblyFileName, configFileName, shadowCopy, shadowCopyFolder, diagnosticMessageSink)
+                      IMessageSink diagnosticMessageSink = null,
+                      bool verifyTestAssemblyExists = true)
+            : base(useAppDomain, sourceInformationProvider, assemblyFileName, configFileName, shadowCopy, shadowCopyFolder, diagnosticMessageSink, verifyTestAssemblyExists)
         {
 #if ANDROID
             var assemblyName = Assembly.Load(assemblyFileName).GetName();
-#elif WINDOWS_PHONE_APP || WINDOWS_PHONE || DNX451 || DNXCORE50
+#elif WINDOWS_PHONE_APP || WINDOWS_PHONE || DOTNETCORE
             // Make sure we only use the short form for WPA81
             var an = Assembly.Load(new AssemblyName { Name = Path.GetFileNameWithoutExtension(assemblyFileName) }).GetName();
             var assemblyName = new AssemblyName { Name = an.Name, Version = an.Version };

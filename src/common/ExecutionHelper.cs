@@ -8,9 +8,7 @@ namespace Xunit
         /// Gets the file name of the execution DLL (with extension) used to run xUnit.net v2 tests.
         /// </summary>
         public static string AssemblyFileName
-        {
-            get { return string.Format("xunit.execution.{0}.dll", PlatformSpecificAssemblySuffix); }
-        }
+            => $"xunit.execution.{PlatformSpecificAssemblySuffix}.dll";
 
         /// <summary>
         /// Gets the file name suffix used to construct platform-specific DLL names.
@@ -25,10 +23,8 @@ namespace Xunit
         public static readonly string PlatformSpecificAssemblySuffix = "universal";
 #elif WINDOWS_PHONE
         public static readonly string PlatformSpecificAssemblySuffix = "wp8";
-#elif DNX451 || DNXCORE50
-        public static readonly string PlatformSpecificAssemblySuffix = "dnx";
-#elif NO_APPDOMAIN
-        public static readonly string PlatformSpecificAssemblySuffix = "win8";
+#elif DOTNETCORE
+        public static readonly string PlatformSpecificAssemblySuffix = "DotNetCore";
 #else
         public static readonly string PlatformSpecificAssemblySuffix = "desktop";
 #endif

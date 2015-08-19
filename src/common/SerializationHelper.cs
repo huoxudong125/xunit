@@ -61,13 +61,13 @@ namespace Xunit.Sdk
                 throw new ArgumentException("Cannot serialize an object that does not implement " + typeof(IXunitSerializable).FullName, nameof(value));
 
             var serializationInfo = new XunitSerializationInfo(serializable);
-            return string.Format("{0}:{1}", GetTypeNameForSerialization(value.GetType()), serializationInfo.ToSerializedString());
+            return $"{GetTypeNameForSerialization(value.GetType())}:{serializationInfo.ToSerializedString()}";
         }
 
         /// <summary>Gets whether the specified <paramref name="value"/> is serializable with <see cref="Serialize"/>.</summary>
         /// <param name="value">The object to test for serializability.</param>
         /// <returns>true if the object can be serialized; otherwise, false.</returns>
-        internal static bool IsSerializable(object value)
+        public static bool IsSerializable(object value)
         {
             return XunitSerializationInfo.CanSerializeObject(value);
         }
@@ -155,7 +155,7 @@ namespace Xunit.Sdk
             if (assemblyName.EndsWith(ExecutionHelper.SubstitutionToken, StringComparison.OrdinalIgnoreCase))
                 assemblyName = assemblyName.Substring(0, assemblyName.Length - ExecutionHelper.SubstitutionToken.Length + 1) + ExecutionHelper.PlatformSpecificAssemblySuffix;
 
-#if WINDOWS_PHONE_APP || WINDOWS_PHONE || DNX451 || DNXCORE50
+#if WINDOWS_PHONE_APP || WINDOWS_PHONE || DOTNETCORE
             Assembly assembly = null;
             try
             {
@@ -190,6 +190,10 @@ namespace Xunit.Sdk
         /// </summary>
         public static string GetTypeNameForSerialization(Type type)
         {
+            if (!type.IsFromLocalAssembly())
+                throw new ArgumentException($"We cannot serialize type {type.FullName} because it lives in the GAC", nameof(type));
+
+            // Use the abstract Type instead of concretes like RuntimeType
             if (typeof(Type).IsAssignableFrom(type))
                 type = typeof(Type);
 
@@ -206,8 +210,8 @@ namespace Xunit.Sdk
             if (type.IsGenericType() && !type.IsGenericTypeDefinition())
             {
                 var typeDefinition = type.GetGenericTypeDefinition();
-                var innerTypes = type.GetGenericArguments().Select(t => string.Format("[{0}]", GetTypeNameForSerialization(t))).ToArray();
-                typeName = string.Format("{0}[{1}]", typeDefinition.FullName, string.Join(",", innerTypes));
+                var innerTypes = type.GetGenericArguments().Select(t => $"[{GetTypeNameForSerialization(t)}]").ToArray();
+                typeName = $"{typeDefinition.FullName}[{string.Join(",", innerTypes)}]";
 
                 while (arrayRanks.Count > 0)
                 {
@@ -225,7 +229,7 @@ namespace Xunit.Sdk
             if (type.GetAssembly().GetCustomAttributes().FirstOrDefault(a => a != null && a.GetType().FullName == "Xunit.Sdk.PlatformSpecificAssemblyAttribute") != null)
                 assemblyName = assemblyName.Substring(0, assemblyName.LastIndexOf('.')) + ExecutionHelper.SubstitutionToken;
 
-            return string.Format("{0}, {1}", typeName, assemblyName);
+            return $"{typeName}, {assemblyName}";
         }
 
         /// <summary>

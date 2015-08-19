@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Xunit.Abstractions;
 
-#if WINDOWS_PHONE_APP || WINDOWS_PHONE || DNXCORE50
+#if WINDOWS_PHONE_APP || WINDOWS_PHONE || DOTNETCORE
 using System.Reflection;
 using System.Runtime.Versioning;
 #else
@@ -43,6 +43,7 @@ namespace Xunit.Sdk
             DiagnosticMessageSink = diagnosticMessageSink;
             ExecutionMessageSink = executionMessageSink;
             ExecutionOptions = executionOptions;
+            TestCaseOrderer = new DefaultTestCaseOrderer(diagnosticMessageSink);
         }
 
         /// <summary>
@@ -73,7 +74,7 @@ namespace Xunit.Sdk
         /// <summary>
         /// Gets or sets the test case orderer that will be used to decide how to order the tests.
         /// </summary>
-        protected ITestCaseOrderer TestCaseOrderer { get; set; } = new DefaultTestCaseOrderer();
+        protected ITestCaseOrderer TestCaseOrderer { get; set; }
 
         /// <summary>
         /// Gets or sets the test collection orderer that will be used to decide how to order the test collections.
@@ -99,11 +100,11 @@ namespace Xunit.Sdk
         /// placed into <see cref="ITestAssemblyStarting.TestEnvironment"/>.
         /// </summary>
         protected virtual string GetTestFrameworkEnvironment()
-            => string.Format("{0}-bit .NET {1}", IntPtr.Size * 8, GetVersion());
+            => $"{IntPtr.Size * 8}-bit .NET {GetVersion()}";
 
         static string GetVersion()
         {
-#if WINDOWS_PHONE_APP || WINDOWS_PHONE || DNXCORE50
+#if WINDOWS_PHONE_APP || WINDOWS_PHONE || DOTNETCORE
             var attr = typeof(object).GetTypeInfo().Assembly.GetCustomAttribute<TargetFrameworkAttribute>();
             return attr == null ? "(unknown version)" : attr.FrameworkDisplayName;
 #else
@@ -159,7 +160,7 @@ namespace Xunit.Sdk
             catch (Exception ex)
             {
                 var innerEx = ex.Unwrap();
-                DiagnosticMessageSink.OnMessage(new DiagnosticMessage("Test collection orderer '{0}' threw '{1}' during ordering: {2}", TestCollectionOrderer.GetType().FullName, innerEx.GetType().FullName, innerEx.StackTrace));
+                DiagnosticMessageSink.OnMessage(new DiagnosticMessage($"Test collection orderer '{TestCollectionOrderer.GetType().FullName}' threw '{innerEx.GetType().FullName}' during ordering: {innerEx.Message}{Environment.NewLine}{innerEx.StackTrace}"));
                 orderedTestCollections = testCasesByCollection.Keys.ToList();
             }
 
@@ -175,7 +176,7 @@ namespace Xunit.Sdk
         {
             var cancellationTokenSource = new CancellationTokenSource();
             var totalSummary = new RunSummary();
-#if !WINDOWS_PHONE_APP && !WINDOWS_PHONE && !DNX451 && !DNXCORE50
+#if !WINDOWS_PHONE_APP && !WINDOWS_PHONE && !DOTNETCORE
             var currentDirectory = Directory.GetCurrentDirectory();
 #endif
             var testFrameworkEnvironment = GetTestFrameworkEnvironment();
@@ -183,7 +184,7 @@ namespace Xunit.Sdk
 
             using (var messageBus = CreateMessageBus())
             {
-#if !WINDOWS_PHONE_APP && !WINDOWS_PHONE && !DNX451 && !DNXCORE50
+#if !WINDOWS_PHONE_APP && !WINDOWS_PHONE && !DOTNETCORE
                 Directory.SetCurrentDirectory(Path.GetDirectoryName(TestAssembly.Assembly.AssemblyPath));
 #endif
 
@@ -207,7 +208,7 @@ namespace Xunit.Sdk
                     finally
                     {
                         messageBus.QueueMessage(new TestAssemblyFinished(TestCases.Cast<ITestCase>(), TestAssembly, totalSummary.Time, totalSummary.Total, totalSummary.Failed, totalSummary.Skipped));
-#if !WINDOWS_PHONE_APP && !WINDOWS_PHONE && !DNX451 && !DNXCORE50
+#if !WINDOWS_PHONE_APP && !WINDOWS_PHONE && !DOTNETCORE
                         Directory.SetCurrentDirectory(currentDirectory);
 #endif
                     }

@@ -18,7 +18,10 @@ namespace Xunit.Sdk
         bool initialized;
         int maxParallelThreads;
         SynchronizationContext originalSyncContext;
+
+#if !DOTNETCORE
         MaxConcurrencySyncContext syncContext;
+#endif
 
         /// <summary>
         /// Initializes a new instance of the <see cref="XunitTestAssemblyRunner"/> class.
@@ -36,6 +39,7 @@ namespace Xunit.Sdk
             : base(testAssembly, testCases, diagnosticMessageSink, executionMessageSink, executionOptions)
         { }
 
+#if !DOTNETCORE
         /// <inheritdoc/>
         public override void Dispose()
         {
@@ -43,6 +47,7 @@ namespace Xunit.Sdk
             if (disposable != null)
                 disposable.Dispose();
         }
+#endif
 
         /// <inheritdoc/>
         protected override string GetTestFrameworkDisplayName()
@@ -55,26 +60,30 @@ namespace Xunit.Sdk
 
             var testCollectionFactory = ExtensibilityPointFactory.GetXunitTestCollectionFactory(DiagnosticMessageSink, collectionBehaviorAttribute, TestAssembly);
 
-            return string.Format("{0} [{1}, {2}{3}]",
-                                 base.GetTestFrameworkEnvironment(),
-                                 testCollectionFactory.DisplayName,
-                                 disableParallelization ? "non-parallel" : "parallel",
-                                 maxParallelThreads > 0 ? string.Format(" ({0} threads)", maxParallelThreads) : "");
+#if DOTNETCORE
+            var threadCountText = "unlimited";
+#else
+            var threadCountText = maxParallelThreads < 0 ? "unlimited" : maxParallelThreads.ToString();
+#endif
+
+            return $"{base.GetTestFrameworkEnvironment()} [{testCollectionFactory.DisplayName}, {(disableParallelization ? "non-parallel" : $"parallel ({threadCountText} threads)")}]";
         }
 
         /// <summary>
         /// Gets the synchronization context used when potentially running tests in parallel.
         /// If <paramref name="maxParallelThreads"/> is greater than 0, it creates
-        /// and uses an instance of <see cref="MaxConcurrencySyncContext"/>.
+        /// and uses an instance of <see cref="T:Xunit.Sdk.MaxConcurrencySyncContext"/>.
         /// </summary>
         /// <param name="maxParallelThreads">The maximum number of parallel threads.</param>
         protected virtual void SetupSyncContext(int maxParallelThreads)
         {
-            if (maxParallelThreads < 1)
-                maxParallelThreads = Environment.ProcessorCount;
-
-            syncContext = new MaxConcurrencySyncContext(maxParallelThreads);
-            SetSynchronizationContext(syncContext);
+#if !DOTNETCORE
+            if (maxParallelThreads > 0)
+            {
+                syncContext = new MaxConcurrencySyncContext(maxParallelThreads);
+                SetSynchronizationContext(syncContext);
+            }
+#endif
         }
 
         /// <summary>
@@ -94,9 +103,9 @@ namespace Xunit.Sdk
             }
 
             disableParallelization = ExecutionOptions.DisableParallelization() ?? disableParallelization;
-            var maxParallelThreadsOption = ExecutionOptions.MaxParallelThreads() ?? 0;
-            if (maxParallelThreadsOption > 0)
-                maxParallelThreads = maxParallelThreadsOption;
+            maxParallelThreads = ExecutionOptions.MaxParallelThreads() ?? maxParallelThreads;
+            if (maxParallelThreads == 0)
+                maxParallelThreads = Environment.ProcessorCount;
 
             var testCaseOrdererAttribute = TestAssembly.Assembly.GetCustomAttributes(typeof(TestCaseOrdererAttribute)).SingleOrDefault();
             if (testCaseOrdererAttribute != null)
@@ -109,14 +118,14 @@ namespace Xunit.Sdk
                     else
                     {
                         var args = testCaseOrdererAttribute.GetConstructorArguments().Cast<string>().ToList();
-                        DiagnosticMessageSink.OnMessage(new DiagnosticMessage("Could not find type '{0}' in {1} for assembly-level test case orderer", args[0], args[1]));
+                        DiagnosticMessageSink.OnMessage(new DiagnosticMessage($"Could not find type '{args[0]}' in {args[1]} for assembly-level test case orderer"));
                     }
                 }
                 catch (Exception ex)
                 {
                     var innerEx = ex.Unwrap();
                     var args = testCaseOrdererAttribute.GetConstructorArguments().Cast<string>().ToList();
-                    DiagnosticMessageSink.OnMessage(new DiagnosticMessage("Assembly-level test case orderer '{0}' threw '{1}' during construction: {2}", args[0], innerEx.GetType().FullName, innerEx.StackTrace));
+                    DiagnosticMessageSink.OnMessage(new DiagnosticMessage($"Assembly-level test case orderer '{args[0]}' threw '{innerEx.GetType().FullName}' during construction: {innerEx.Message}{Environment.NewLine}{innerEx.StackTrace}"));
                 }
             }
 
@@ -131,14 +140,14 @@ namespace Xunit.Sdk
                     else
                     {
                         var args = testCollectionOrdererAttribute.GetConstructorArguments().Cast<string>().ToList();
-                        DiagnosticMessageSink.OnMessage(new DiagnosticMessage("Could not find type '{0}' in {1} for assembly-level test collection orderer", args[0], args[1]));
+                        DiagnosticMessageSink.OnMessage(new DiagnosticMessage($"Could not find type '{args[0]}' in {args[1]} for assembly-level test collection orderer"));
                     }
                 }
                 catch (Exception ex)
                 {
                     var innerEx = ex.Unwrap();
                     var args = testCollectionOrdererAttribute.GetConstructorArguments().Cast<string>().ToList();
-                    DiagnosticMessageSink.OnMessage(new DiagnosticMessage("Assembly-level test collection orderer '{0}' threw '{1}' during construction: {2}", args[0], innerEx.GetType().FullName, innerEx.StackTrace));
+                    DiagnosticMessageSink.OnMessage(new DiagnosticMessage($"Assembly-level test collection orderer '{args[0]}' threw '{innerEx.GetType().FullName}' during construction: {innerEx.Message}{Environment.NewLine}{innerEx.StackTrace}"));
                 }
             }
 
@@ -169,13 +178,17 @@ namespace Xunit.Sdk
 
             SetupSyncContext(maxParallelThreads);
 
-            var scheduler = TaskScheduler.FromCurrentSynchronizationContext();
+            Func<Func<Task<RunSummary>>, Task<RunSummary>> taskRunner;
+            if (SynchronizationContext.Current != null)
+            {
+                var scheduler = TaskScheduler.FromCurrentSynchronizationContext();
+                taskRunner = code => Task.Factory.StartNew(code, cancellationTokenSource.Token, TaskCreationOptions.DenyChildAttach | TaskCreationOptions.HideScheduler, scheduler).Unwrap();
+            }
+            else
+                taskRunner = code => Task.Run(code, cancellationTokenSource.Token);
 
             var tasks = OrderTestCollections().Select(
-                collection => Task.Factory.StartNew(() => RunTestCollectionAsync(messageBus, collection.Item1, collection.Item2, cancellationTokenSource),
-                                                                                 cancellationTokenSource.Token,
-                                                                                 TaskCreationOptions.DenyChildAttach | TaskCreationOptions.HideScheduler,
-                                                                                 scheduler).Unwrap()
+                collection => taskRunner(() => RunTestCollectionAsync(messageBus, collection.Item1, collection.Item2, cancellationTokenSource))
             ).ToArray();
 
             var summaries = new List<RunSummary>();

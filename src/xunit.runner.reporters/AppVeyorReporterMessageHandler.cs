@@ -25,7 +25,7 @@ namespace Xunit.Runner.Reporters
         {
             var testName = testStarting.Test.DisplayName;
             if (testMethods.ContainsKey(testName))
-                testName = string.Format("{0} {1}", testName, testMethods[testName]);
+                testName = $"{testName} {testMethods[testName]}";
 
             AppVeyorAddTest(testName, "xUnit", assemblyFileName, "Running", null, null, null, null, null);
 
@@ -67,15 +67,15 @@ namespace Xunit.Runner.Reporters
             if (testMethods.ContainsKey(methodName))
             {
                 number = testMethods[methodName];
-                testName = string.Format("{0} {1}", methodName, number);
+                testName = $"{methodName} {number}";
             }
 
             testMethods[methodName] = number + 1;
             return testName;
         }
 
-        static void AppVeyorAddTest(string testName, string testFramework, string fileName, string outcome, long? durationMilliseconds,
-                                    string errorMessage, string errorStackTrace, string stdOut, string stdErr)
+        void AppVeyorAddTest(string testName, string testFramework, string fileName, string outcome, long? durationMilliseconds,
+                             string errorMessage, string errorStackTrace, string stdOut, string stdErr)
         {
             if (!AppVeyorClient.IsRunningInAppVeyor)
                 return;
@@ -99,12 +99,12 @@ namespace Xunit.Runner.Reporters
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine("Error communicating AppVeyor Build Worker API: " + ex.Message);
+                Logger.LogError("Error communicating AppVeyor Build Worker API: " + ex.Message);
             }
         }
 
-        static void AppVeyorUpdateTest(string testName, string testFramework, string fileName, string outcome, long? durationMilliseconds,
-                                       string errorMessage, string errorStackTrace, string stdOut, string stdErr)
+        void AppVeyorUpdateTest(string testName, string testFramework, string fileName, string outcome, long? durationMilliseconds,
+                                string errorMessage, string errorStackTrace, string stdOut, string stdErr)
         {
             if (!AppVeyorClient.IsRunningInAppVeyor)
                 return;
@@ -128,7 +128,7 @@ namespace Xunit.Runner.Reporters
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine("Error communicating AppVeyor Build Worker API: " + ex.Message);
+                Logger.LogError("Error communicating AppVeyor Build Worker API: " + ex.Message);
             }
         }
 

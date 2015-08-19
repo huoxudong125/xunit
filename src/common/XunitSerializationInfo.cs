@@ -73,9 +73,9 @@ namespace Xunit.Serialization
             var serializedValue = Serialize(triple.Value);
             // Leaving off the colon is how we indicate null-ness
             if (serializedValue == null)
-                return string.Format("{0}:{1}", triple.Key, serializedType);
+                return $"{triple.Key}:{serializedType}";
 
-            return string.Format("{0}:{1}:{2}", triple.Key, serializedType, serializedValue);
+            return $"{triple.Key}:{serializedType}:{serializedValue}";
         }
 
         /// <summary>
@@ -199,7 +199,7 @@ namespace Xunit.Serialization
             }
             catch (MissingMemberException)
             {
-                throw new InvalidOperationException(string.Format("Could not de-serialize type '{0}' because it lacks a parameterless constructor.", type.FullName));
+                throw new InvalidOperationException($"Could not de-serialize type '{type.FullName}' because it lacks a parameterless constructor.");
             }
         }
 
@@ -283,17 +283,13 @@ namespace Xunit.Serialization
 
             var typeData = value as Type;
             if (typeData != null)
-            {
-                if (!typeData.IsFromLocalAssembly())
-                    throw new ArgumentException(string.Format("We cannot serialize type {0} because it lives in the GAC", typeData.FullName), nameof(value));
                 return SerializationHelper.GetTypeNameForSerialization(typeData);
-            }
 
             var valueType = value.GetType();
             if (valueType.IsEnum())
             {
                 if (!valueType.IsFromLocalAssembly())
-                    throw new ArgumentException(string.Format("We cannot serialize enum {0}.{1} because it lives in the GAC", valueType.FullName, value), nameof(value));
+                    throw new ArgumentException($"We cannot serialize enum {valueType.FullName}.{value} because it lives in the GAC", nameof(value));
                 return value.ToString();
             }
 
@@ -306,14 +302,13 @@ namespace Xunit.Serialization
                 return info.ToSerializedString();
             }
 
-            throw new ArgumentException("We don't know how to serialize type " + valueType.FullName, nameof(value));
+            throw new ArgumentException($"We don't know how to serialize type {valueType.FullName}", nameof(value));
         }
 
         static readonly Type[] supportedSerializationTypes = {
             typeof(IXunitSerializable),
             typeof(char),           typeof(char?),
             typeof(string),
-            typeof(Type),
             typeof(byte),           typeof(byte?),
             typeof(short),          typeof(short?),
             typeof(ushort),         typeof(ushort?),
@@ -343,33 +338,25 @@ namespace Xunit.Serialization
                 {
                     // Avoid enumerator allocation and bounds lookups that comes from enumerating a System.Array
                     foreach (object obj in vector)
-                    {
                         if (!CanSerializeObject(obj))
                             return false;
-                    }
                 }
                 else
                 {
                     foreach (object obj in ((Array)value))
-                    {
                         if (!CanSerializeObject(obj))
                             return false;
-                    }
                 }
                 return true;
             }
 
             foreach (Type supportedType in supportedSerializationTypes)
-            {
                 if (supportedType.IsAssignableFrom(valueType))
                     return true;
-            }
 
             Type typeToCheck = valueType;
             if (valueType.IsEnum() || valueType.IsNullableEnum() || (typeToCheck = value as Type) != null)
-            {
                 return typeToCheck.IsFromLocalAssembly();
-            }
 
             return false;
         }

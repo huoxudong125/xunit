@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <package>
   <metadata minClientVersion="2.8.5">
     <id>xunit.runner.utility</id>
@@ -6,8 +6,14 @@
     <title>xUnit.net [Runner Utility]</title>
     <authors>James Newkirk,Brad Wilson</authors>
     <description>
-      Includes the version-independent runner for xUnit.net to run both v1.9.2 and v2.0+ tests (xunit.runner.utility.dll).
-      Supported platforms: Desktop .NET 3.5+, DNX 4.5.1+, DNX Core 5+, Windows Phone 8 (Silverlight), Universal (Windows Phone 8.1+, Windows 8.1+), MonoTouch, MonoAndroid, Xamarin iOS Universal.
+Includes the version-independent runner for xUnit.net to run both v1.9.2 and v2.0+ tests (xunit.runner.utility.dll).
+
+Supported platforms:
+- Desktop .NET 3.5+
+- .NET Core (Universal Windows Apps 10+, DNX Core 5+)
+- Windows Phone 8 (Silverlight)
+- Universal (Windows Phone 8.1+, Windows 8.1+)
+- Xamarin (MonoTouch, MonoAndroid, Xamarin iOS Universal)
     </description>
     <language>en-US</language>
     <projectUrl>https://github.com/xunit/xunit</projectUrl>
@@ -15,52 +21,88 @@
     <licenseUrl>https://raw.githubusercontent.com/xunit/xunit/master/license.txt</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <dependencies>
-      <group>
+      <group targetFramework="net35">
         <dependency id="xunit.abstractions" version="[2.0.0]" />
       </group>
-      <!--  This is currently broken with DNX Beta 5 because some of these packages end up requiring NuGet 3.0
-      <group targetFramework="dnxcore50">
-        <dependency id="System.Diagnostics.Tools" version="4.0.0-beta-23019" />
-        <dependency id="System.IO.FileSystem" version="4.0.0-beta-23019" />
-        <dependency id="System.Linq" version="4.0.0-beta-23019" />
-        <dependency id="System.Reflection" version="4.0.10-beta-23019" />
-        <dependency id="System.Runtime.Extensions" version="4.0.10-beta-23019" />
-        <dependency id="System.Threading" version="4.0.10-beta-23019" />
+      <group targetFramework="netcore45">
         <dependency id="xunit.abstractions" version="[2.0.0]" />
       </group>
-      -->
+      <group targetFramework="wp8">
+        <dependency id="xunit.abstractions" version="[2.0.0]" />
+      </group>
+      <group targetFramework="wpa81">
+        <dependency id="xunit.abstractions" version="[2.0.0]" />
+      </group>
+      <group targetFramework="monoandroid">
+        <dependency id="xunit.abstractions" version="[2.0.0]" />
+      </group>
+      <group targetFramework="monotouch">
+        <dependency id="xunit.abstractions" version="[2.0.0]" />
+      </group>
+      <group targetFramework="xamarinios">
+        <dependency id="xunit.abstractions" version="[2.0.0]" />
+      </group>
+      <group targetFramework="dotnet">
+        <dependency id="System.Collections" version="4.0.10" />
+        <dependency id="System.Diagnostics.Debug" version="4.0.10" />
+        <dependency id="System.Globalization" version="4.0.0" />
+        <dependency id="System.IO" version="4.0.0" />
+        <dependency id="System.Linq" version="4.0.0" />
+        <dependency id="System.Reflection" version="4.0.0" />
+        <dependency id="System.Reflection.Extensions" version="4.0.0" />
+        <dependency id="System.Runtime" version="4.0.20" />
+        <dependency id="System.Runtime.Extensions" version="4.0.10" />
+        <dependency id="System.Text.Encoding" version="4.0.0" />
+        <dependency id="System.Text.RegularExpressions" version="4.0.0" />
+        <dependency id="System.Threading" version="4.0.0" />
+        <dependency id="System.Threading.Tasks" version="4.0.0" />
+        <dependency id="xunit.abstractions" version="2.0.0" />
+      </group>
+      <group targetFramework="dnx451">
+        <dependency id="System.Collections" version="4.0.0" />
+        <dependency id="System.Diagnostics.Debug" version="4.0.0" />
+        <dependency id="System.Globalization" version="4.0.0" />
+        <dependency id="System.IO" version="4.0.0" />
+        <dependency id="System.Linq" version="4.0.0" />
+        <dependency id="System.Reflection" version="4.0.0" />
+        <dependency id="System.Reflection.Extensions" version="4.0.0" />
+        <dependency id="System.Runtime" version="4.0.0" />
+        <dependency id="System.Runtime.Extensions" version="4.0.0" />
+        <dependency id="System.Text.Encoding" version="4.0.0" />
+        <dependency id="System.Text.RegularExpressions" version="4.0.0" />
+        <dependency id="System.Threading" version="4.0.0" />
+        <dependency id="System.Threading.Tasks" version="4.0.0" />
+        <dependency id="xunit.abstractions" version="2.0.0" />
+      </group>
     </dependencies>
   </metadata>
   <files>
-    <file src="xunit.runner.utility.dnx\bin\Release\dnx451\xunit.runner.utility.dnx.dll" target="lib\dnx451\" />
-    <file src="xunit.runner.utility.dnx\bin\Release\dnx451\xunit.runner.utility.dnx.pdb" target="lib\dnx451\" />
-    <file src="xunit.runner.utility.dnx\bin\Release\dnx451\xunit.runner.utility.dnx.xml" target="lib\dnx451\" />
-
-    <file src="xunit.runner.utility.dnx\bin\Release\dnxcore50\xunit.runner.utility.dnx.dll" target="lib\dnxcore50\" />
-    <file src="xunit.runner.utility.dnx\bin\Release\dnxcore50\xunit.runner.utility.dnx.pdb" target="lib\dnxcore50\" />
-    <file src="xunit.runner.utility.dnx\bin\Release\dnxcore50\xunit.runner.utility.dnx.xml" target="lib\dnxcore50\" />
-
+    <file src="xunit.runner.utility.DotNetCore\bin\Release\xunit.runner.utility.DotNetCore.dll" target="lib\dotnet\" />
+    <file src="xunit.runner.utility.DotNetCore\bin\Release\xunit.runner.utility.DotNetCore.pdb" target="lib\dotnet\" />
+    <file src="xunit.runner.utility.DotNetCore\bin\Release\xunit.runner.utility.DotNetCore.xml" target="lib\dotnet\" />
+    <file src="xunit.runner.utility.DotNetCore\bin\Release\xunit.runner.utility.DotNetCore.dll" target="lib\dnx451\" />
+    <file src="xunit.runner.utility.DotNetCore\bin\Release\xunit.runner.utility.DotNetCore.pdb" target="lib\dnx451\" />
+    <file src="xunit.runner.utility.DotNetCore\bin\Release\xunit.runner.utility.DotNetCore.xml" target="lib\dnx451\" />
     <file src="xunit.runner.utility.MonoAndroid\bin\Release\xunit.runner.utility.MonoAndroid.dll" target="lib\monoandroid\" />
     <file src="xunit.runner.utility.MonoAndroid\bin\Release\xunit.runner.utility.MonoAndroid.pdb" target="lib\monoandroid\" />
     <file src="xunit.runner.utility.MonoAndroid\bin\Release\xunit.runner.utility.MonoAndroid.xml" target="lib\monoandroid\" />
-
     <file src="xunit.runner.utility.MonoTouch\bin\iPhone\Release\xunit.runner.utility.MonoTouch.dll" target="lib\monotouch\" />
     <file src="xunit.runner.utility.MonoTouch\bin\iPhone\Release\xunit.runner.utility.MonoTouch.pdb" target="lib\monotouch\" />
     <file src="xunit.runner.utility.MonoTouch\bin\iPhone\Release\xunit.runner.utility.MonoTouch.xml" target="lib\monotouch\" />
-
     <file src="xunit.runner.utility.desktop\bin\Release\xunit.runner.utility.desktop.dll" target="lib\net35\" />
     <file src="xunit.runner.utility.desktop\bin\Release\xunit.runner.utility.desktop.pdb" target="lib\net35\" />
     <file src="xunit.runner.utility.desktop\bin\Release\xunit.runner.utility.desktop.xml" target="lib\net35\" />
-
-    <file src="xunit.runner.utility.universal\bin\Release\xunit.runner.utility.universal.dll" target="lib\portable-wpa81+win81\" />
-    <file src="xunit.runner.utility.universal\bin\Release\xunit.runner.utility.universal.pdb" target="lib\portable-wpa81+win81\" />
-    <file src="xunit.runner.utility.universal\bin\Release\xunit.runner.utility.universal.xml" target="lib\portable-wpa81+win81\" />
-    <file src="xunit.runner.utility.universal\bin\Release\xunit.runner.utility.universal.pri" target="lib\portable-wpa81+win81\" />
-
+    <file src="xunit.runner.utility.universal\bin\Release\xunit.runner.utility.universal.dll" target="lib\win81\" />
+    <file src="xunit.runner.utility.universal\bin\Release\xunit.runner.utility.universal.pdb" target="lib\win81\" />
+    <file src="xunit.runner.utility.universal\bin\Release\xunit.runner.utility.universal.xml" target="lib\win81\" />
+    <file src="xunit.runner.utility.universal\bin\Release\xunit.runner.utility.universal.pri" target="lib\win81\" />
+    <file src="xunit.runner.utility.universal\bin\Release\xunit.runner.utility.universal.dll" target="lib\wpa81\" />
+    <file src="xunit.runner.utility.universal\bin\Release\xunit.runner.utility.universal.pdb" target="lib\wpa81\" />
+    <file src="xunit.runner.utility.universal\bin\Release\xunit.runner.utility.universal.xml" target="lib\wpa81\" />
+    <file src="xunit.runner.utility.universal\bin\Release\xunit.runner.utility.universal.pri" target="lib\wpa81\" />
     <file src="xunit.runner.utility.wp8\bin\Release\xunit.runner.utility.wp8.dll" target="lib\wp8\" />
     <file src="xunit.runner.utility.wp8\bin\Release\xunit.runner.utility.wp8.pdb" target="lib\wp8\" />
     <file src="xunit.runner.utility.wp8\bin\Release\xunit.runner.utility.wp8.xml" target="lib\wp8\" />
-
     <file src="xunit.runner.utility.iOS-Universal\bin\iPhone\Release\xunit.runner.utility.iOS-Universal.pdb" target="lib\Xamarin.iOS\" />
     <file src="xunit.runner.utility.iOS-Universal\bin\iPhone\Release\xunit.runner.utility.iOS-Universal.xml" target="lib\Xamarin.iOS\" />
     <file src="xunit.runner.utility.iOS-Universal\bin\iPhone\Release\xunit.runner.utility.iOS-Universal.dll" target="lib\Xamarin.iOS\" />
